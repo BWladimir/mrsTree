@@ -1,0 +1,36 @@
+.right-click-modal{
+    position: absolute;
+    border: 1px solid black;
+    border-radius: 4px;
+    background-color: white;
+    font-size: 1em;
+}
+
+.right-click-modal__block_show{
+    opacity: 1;
+    height: auto;
+}
+
+.right-click-modal__block_hide{
+    opacity: 0;
+    height: 0;
+    overflow: hidden;
+}
+
+.right-click-modal{
+    transition: opacity 500ms;
+}
+
+.right-click-modal>div{
+    padding: 0 6px;
+    margin: 6px 0 0;
+    border-bottom: 1px solid black;
+}
+
+.right-click-modal>div:last-child{
+    border-bottom: none;
+}
+.right-click-modal>div:hover{
+    opacity: 0.7;
+    cursor: pointer;
+}
