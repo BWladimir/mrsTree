@@ -1,13 +1,14 @@
-import {TreeDataNode} from "antd";
+import {Modal, TreeDataNode} from "antd";
 import {EventDataNode} from "antd/lib/tree"
-import './index.css'
-import {Dispatch, MouseEventHandler, MutableRefObject, useEffect, useRef} from "react";
+import './rightClickModal.style.css'
+import {Dispatch, MouseEventHandler, MutableRefObject, useEffect, useRef, useState} from "react";
 import {useAppDispatch} from "../../hooks/redux";
 import {mdsTreeSlice} from "../../store/reducers/mdsTree/mds.reducer";
+import {IMdsTreeDataNode} from "../../store/reducers/mdsTree/mdsTree.model";
 
 export type IRightClickModalProps = {
     cord: {x: number, y: number};
-    node: EventDataNode<TreeDataNode>;
+    node: EventDataNode<IMdsTreeDataNode>;
     setRightClickModal: Dispatch<IRightClickModalProps | null>;
 }
 
@@ -15,6 +16,7 @@ export default function ({cord, node, setRightClickModal}: IRightClickModalProps
 
     const dispatch = useAppDispatch();
     const ref:MutableRefObject<HTMLDivElement | null> = useRef(null)
+
     useEffect(() => {
         document.addEventListener('mousedown', handleClickOutside, true);
         return () => {

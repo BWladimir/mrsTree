@@ -1,78 +1,61 @@
 import {TreeDataNode} from "antd";
 import {EventDataNode} from "antd/lib/tree"
 import {createSlice, PayloadAction} from "@reduxjs/toolkit";
-import {IMdsTree} from "./mdsTree.model";
 import {Key} from "react";
-
-const initialState: IMdsTree = {
-    treeNode: [
-        {
-            title: 'parent',
-            key: '0',
-            // disabled: true,
-            children: [
-                {
-                    title: 'parent',
-                    key: '0-0',
-                    children: [
-                        {
-                            title: 'child',
-                            key: '0-0-0',
-                            disableCheckbox: true,
-                        },
-                        {
-                            title: 'child',
-                            key: '0-0-1',
-                        },
-                        {
-                            title: 'child',
-                            key: '0-0-2',
-                        },
-                        {
-                            title: 'child',
-                            key: '0-0-3',
-                        },
-                    ],
-                },
-            ]
-        },
-    ]
-}
+import {initialState} from "./mds.default"
+import {IMdsTreeDataNode} from "./mdsTree.model";
 
 export const mdsTreeSlice = createSlice({
     name: "mdsTree",
     initialState,
     reducers: {
-        addChild: (state, action:PayloadAction<EventDataNode<TreeDataNode>>) => {
+        changeExpanded(state, action: PayloadAction<{expandedKeys: Key[], info: { node: EventDataNode<TreeDataNode>, expanded: boolean, nativeEvent: MouseEvent}}>) {
+            if(action.payload.info.expanded){
+                state.expandedNode = (action.payload.expandedKeys)
+            }
+            else{
+                state.expandedNode = state.expandedNode.filter(node =>
+                    !action.payload.expandedKeys.every(expandedKey => expandedKey !== node)
+                )
+            }
+            console.log(state.expandedNode)
+        },
+        setSelected(state, action: PayloadAction<EventDataNode<IMdsTreeDataNode>>) {
+            state.selected = [action.payload];
+        },
+        addChild: (state, action:PayloadAction<EventDataNode<IMdsTreeDataNode>>) => {
             const {elem} = findNode(state.treeNode, action.payload.pos.split('-'))
             if(!elem)
                 return
             if(!elem.children)
                 elem.children = []
-            elem.children.push({key: getNewChildKey(elem.key, elem.children), title: "added"})
+            //@ts-ignore
+            const newElem: EventDataNode<IMdsTreeDataNode> = {
+                key: getNewChildKey(elem.key, elem.children),
+                title: "added",
+                additional: {wight: 0},
+                pos: `${action.payload.pos}-${elem.children.length}`,
+            }
+            elem.children.push(newElem)
+            state.selected = [{...newElem} as EventDataNode<IMdsTreeDataNode>]
+            if(!state.expandedNode.some(node => node === action.payload.key))
+                state.expandedNode.push(action.payload.key);
         },
-        removeNode: (state, action:PayloadAction<EventDataNode<TreeDataNode>>) => {
+        removeNode: (state, action:PayloadAction<EventDataNode<IMdsTreeDataNode>>) => {
             const {elem, node} = findNode(state.treeNode, action.payload.pos.split('-'))
             if(!elem || !node)
                 return
             node.splice( node.indexOf(elem), 1)
 
-        },
 
-        changeNode: (state, action: PayloadAction<EventDataNode<TreeDataNode>>) => {
+        },
+        changeNode: (state, action: PayloadAction<EventDataNode<IMdsTreeDataNode>>) => {
             let {elem} = findNode(state.treeNode, action.payload.pos.split('-'))
             if(!elem)
                 return
             Object.assign(elem, action.payload)
         },
-        nodeMove: (
-            state,
-            action: PayloadAction<{
-                targetNodePosition: string[],
-                movedPosition: string[],
-                position: number, // the drop position relative to the drop node, inside 0, top -1, bottom 1
-            }>
-        ) => {
+        nodeMove: (state, action: PayloadAction<{ targetNodePosition: string[], movedPosition: string[], position: number,}>) => {
             const {targetNodePosition, movedPosition, position} = action.payload
 
             const moved = findNode(state.treeNode, movedPosition)
@@ -101,12 +84,11 @@ export const mdsTreeSlice = createSlice({
 
 
         }
-
     },
 })
 
-const findNode = (tree: TreeDataNode[], position: string[]): {node: TreeDataNode[] | null, elem: TreeDataNode | null} => {
-    let next: TreeDataNode[] = tree
+const findNode = (tree: IMdsTreeDataNode[], position: string[]): {node: IMdsTreeDataNode[] | null, elem: IMdsTreeDataNode | null} => {
+    let next: IMdsTreeDataNode[] = tree
     for (let i = 1; i < position.length - 1; i++) {
         if(!next[+position[i]] || !next[+position[i]].children)
             return {node: null, elem: null}
